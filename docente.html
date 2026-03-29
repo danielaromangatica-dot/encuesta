@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel docente — Subenotas</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #faf8f5;
+    --bg2: #f0ede8;
+    --bg3: #e8e4de;
+    --text: #2d2520;
+    --text2: #7a6f68;
+    --text3: #a89e97;
+    --border: rgba(80,60,50,0.12);
+    --border2: rgba(80,60,50,0.22);
+    --accent: #4a6fa5;
+    --accent-bg: #eef2f8;
+    --rose: #c47a7a;
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 1.5rem 1rem 3rem; }
+  .container { max-width: 580px; margin: 0 auto; }
+  .header { margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .header-left .tag { font-size: 11px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; }
+  .header-left h1 { font-size: 19px; font-weight: 500; color: var(--text); }
+  .header-actions { display: flex; gap: 8px; }
+  .btn-outline { padding: 7px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); background: transparent; font-size: 12px; color: var(--text2); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .btn-outline:hover { background: var(--bg2); }
+  .btn-danger { border-color: var(--rose); color: var(--rose); }
+  .btn-danger:hover { background: #fdf0f0; }
+  .nav { display: flex; gap: 6px; margin-bottom: 1.5rem; background: var(--bg2); padding: 4px; border-radius: var(--radius); border: 0.5px solid var(--border); }
+  .nav-btn { flex: 1; padding: 8px 8px; border-radius: calc(var(--radius) - 3px); border: none; background: transparent; cursor: pointer; font-size: 12px; color: var(--text2); transition: all 0.15s; font-family: inherit; }
+  .nav-btn.active { background: var(--bg); color: var(--text); font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+  .view { display: none; }
+  .view.active { display: block; }
+  .panel-section { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+  .panel-title { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 1rem; }
+  .panel-q-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 10px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--bg2); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .stat-val { font-size: 24px; font-weight: 500; color: var(--accent); }
+  .stat-lbl { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .bar-lbl { font-size: 12px; color: var(--text2); width: 110px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
+  .bar-count { font-size: 12px; color: var(--text3); width: 16px; text-align: right; }
+  .resp-list { display: flex; flex-direction: column; gap: 7px; }
+  .resp-item { padding: 9px 13px; background: var(--bg2); border-radius: var(--radius-sm); font-size: 13px; color: var(--text); line-height: 1.5; border-left: 2px solid var(--rose); }
+  .resp-empty { font-size: 13px; color: var(--text3); font-style: italic; }
+  .word-cloud { min-height: 100px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 1rem; background: var(--bg2); border-radius: var(--radius-sm); }
+  .word-chip { font-weight: 500; border-radius: 4px; padding: 2px 5px; }
+  .refresh-note { font-size: 12px; color: var(--text3); margin-top: 10px; text-align: center; }
+  .qr-hint { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 1.25rem; }
+  .qr-input-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .qr-input-row input { flex: 1; padding: 10px 13px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg2); }
+  .qr-input-row input:focus { outline: none; border-color: var(--accent); }
+  .qr-gen-btn { padding: 10px 16px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; transition: opacity 0.15s; }
+  .qr-gen-btn:hover { opacity: 0.88; }
+  #qr-output { text-align: center; margin-top: 1rem; }
+  .qr-url-display { margin-top: 10px; font-size: 12px; color: var(--text3); word-break: break-all; }
+  .live-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); margin-bottom: 1rem; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #6ab04c; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-left">
+      <div class="tag">Subenotas — Panel docente</div>
+      <h1>Primera clase</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-outline btn-danger" onclick="clearData()">Borrar respuestas</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchView('panel',this)">Respuestas</button>
+    <button class="nav-btn" onclick="switchView('qr',this)">Código QR</button>
+  </div>
+
+  <div id="view-panel" class="view active">
+    <div class="live-badge"><div class="live-dot"></div> Actualiza cada 15 segundos</div>
+
+    <div class="panel-section">
+      <div class="panel-title">Resumen</div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-val" id="total-count">0</div><div class="stat-lbl">respuestas</div></div>
+        <div class="stat"><div class="stat-val" id="pct-ganas">—</div><div class="stat-lbl">con ganas</div></div>
+        <div class="stat"><div class="stat-val" id="pct-sinexp">—</div><div class="stat-lbl">sin expectativa / no sé</div></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title">Pregunta 1 — ¿Cómo llegaste hoy?</div>
+      <div id="bars-q1"><div class="resp-empty">Sin respuestas aún.</div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-q-title">Pregunta 2 — ¿Por qué te matriculaste?</div>
+      <div class="resp-list" id="resp-q2"><div class="resp-empty">Sin respuestas aún.</div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-q-title">Pregunta 3 — ¿Qué lees fuera del colegio?</div>
+      <div class="resp-list" id="resp-q3"><div class="resp-empty">Sin respuestas aún.</div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-q-title">Pregunta 4 — ¿Algo de Lengua que se te haya dado bien?</div>
+      <div class="resp-list" id="resp-q4"><div class="resp-empty">Sin respuestas aún.</div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-q-title">Pregunta 5 — ¿Qué les gustaría aprender o mejorar?</div>
+      <div class="resp-list" id="resp-q5"><div class="resp-empty">Sin respuestas aún.</div></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-q-title">Pregunta 6 — Una palabra</div>
+      <div class="word-cloud" id="word-cloud"><span class="resp-empty">Las palabras aparecerán aquí.</span></div>
+    </div>
+  </div>
+
+  <div id="view-qr" class="view">
+    <div class="panel-section">
+      <div class="panel-title">Generar código QR</div>
+      <p class="qr-hint">Pega el link del formulario de estudiantes (tu GitHub Pages) y genera el QR para proyectarlo en clases.</p>
+      <div class="qr-input-row">
+        <input type="text" id="qr-url-input" placeholder="https://tu-usuario.github.io/encuesta">
+        <button class="qr-gen-btn" onclick="generateQR()">Generar</button>
+      </div>
+      <div id="qr-output"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+var q1Values=['Con ganas','Sin ganas','Sin expectativa','No sé todavía'];
+var colors=['#4a6fa5','#1D9E75','#c47a7a','#7F77DD','#BA7517','#D4537E','#639922','#0F6E56','#993C1D'];
+
+function switchView(v,btn){
+  document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(el){el.classList.remove('active');});
+  document.getElementById('view-'+v).classList.add('active');
+  btn.classList.add('active');
+}
+
+function getResponses(){
+  return JSON.parse(localStorage.getItem('subenotas_responses')||'[]');
+}
+
+function updatePanel(){
+  var responses=getResponses();
+  var n=responses.length;
+  document.getElementById('total-count').textContent=n;
+  if(n===0){
+    document.getElementById('pct-ganas').textContent='—';
+    document.getElementById('pct-sinexp').textContent='—';
+    document.getElementById('bars-q1').innerHTML='<div class="resp-empty">Sin respuestas aún.</div>';
+    ['q2','q3','q4','q5'].forEach(function(q){document.getElementById('resp-'+q).innerHTML='<div class="resp-empty">Sin respuestas aún.</div>';});
+    document.getElementById('word-cloud').innerHTML='<span class="resp-empty">Las palabras aparecerán aquí.</span>';
+    return;
+  }
+  var counts={};
+  q1Values.forEach(function(v){counts[v]=0;});
+  responses.forEach(function(r){if(r.q1&&counts[r.q1]!==undefined)counts[r.q1]++;});
+  document.getElementById('pct-ganas').textContent=Math.round((counts['Con ganas']/n)*100)+'%';
+  document.getElementById('pct-sinexp').textContent=Math.round(((counts['Sin expectativa']+counts['No sé todavía'])/n)*100)+'%';
+  var bars='';
+  q1Values.forEach(function(k){
+    var pct=Math.round((counts[k]/n)*100);
+    bars+='<div class="bar-row"><div class="bar-lbl">'+k+'</div><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%"></div></div><div class="bar-count">'+counts[k]+'</div></div>';
+  });
+  document.getElementById('bars-q1').innerHTML=bars;
+  ['q2','q3','q4','q5'].forEach(function(q){
+    var items=responses.map(function(r){return r[q];}).filter(Boolean);
+    document.getElementById('resp-'+q).innerHTML=items.length?items.map(function(t){return'<div class="resp-item">'+esc(t)+'</div>';}).join(''):'<div class="resp-empty">Sin respuestas aún.</div>';
+  });
+  var words=responses.map(function(r){return r.q6;}).filter(Boolean);
+  var freq={};
+  words.forEach(function(w){freq[w]=(freq[w]||0)+1;});
+  var max=Math.max.apply(null,Object.values(freq).concat([1]));
+  var sorted=Object.keys(freq).sort(function(a,b){return freq[b]-freq[a];});
+  document.getElementById('word-cloud').innerHTML=sorted.length?sorted.map(function(w,i){
+    var size=13+Math.round((freq[w]/max)*16);
+    return'<span class="word-chip" style="font-size:'+size+'px;color:'+colors[i%colors.length]+'">'+esc(w)+'</span>';
+  }).join(''):'<span class="resp-empty">Las palabras aparecerán aquí.</span>';
+}
+
+function clearData(){
+  if(!confirm('¿Borrar todas las respuestas? Esta acción no se puede deshacer.'))return;
+  localStorage.removeItem('subenotas_responses');
+  updatePanel();
+}
+
+function generateQR(){
+  var url=document.getElementById('qr-url-input').value.trim();
+  if(!url){alert('Pega el link primero.');return;}
+  if(!url.startsWith('http'))url='https://'+url;
+  var output=document.getElementById('qr-output');
+  output.innerHTML='';
+  var wrap=document.createElement('div');
+  output.appendChild(wrap);
+  new QRCode(wrap,{text:url,width:220,height:220,colorDark:'#2d2520',colorLight:'#faf8f5',correctLevel:QRCode.CorrectLevel.H});
+  var d=document.createElement('div');
+  d.className='qr-url-display';
+  d.textContent=url;
+  output.appendChild(d);
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+updatePanel();
+setInterval(updatePanel,15000);
+</script>
+</body>
+</html>
